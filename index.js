@@ -227,20 +227,20 @@ app.get('/getEMwindowRating', function(request, response) {
         var arrivalRateArray = JSON.parse(request.query.arrivalRateArray);
         var processTimeArray = JSON.parse(request.query.processTimeArray);
 
-        var varArrivalRate = stats.variance(arrivalRateArray);
-        var varProcessTime = stats.variance(processTimeArray);
+
+        var stdDevArrivalRate = stats.stdev(arrivalRateArray);
+        var stdDevProcessTime = stats.stdev(processTimeArray);
+
+        var meanArrivalRate = stats.mean(arrivalRateArray);
+        var meanProcessTime = stats.mean(processTimeArray);
+
+        var coVarArrivalRate = stdDevArrivalRate / meanArrivalRate;
+        var coVarProcessTime = stdDevProcessTime / meanProcessTime;
+
         var capacityUtil = parseFloat(request.query.capacityUtilization);
-        var processTime = parseFloat(processTimeArray[0]);
-
-        var total = 0;
-        for (var i = 0; i < processTimeArray.length; i++) {
-                total += parseFloat(processTimeArray[i]);
-        }
-
-        var avg = total / processTimeArray.length;
 
         // Compute cycle time
-        var rating = ((Math.pow(varArrivalRate, 2) + Math.pow(varProcessTime, 2)) / 2) * (capacityUtil / (1 - capacityUtil)) * avg;
+        var rating = ((Math.pow(coVarArrivalRate, 2) + Math.pow(coVarProcessTime, 2)) / 2) * (capacityUtil / (1 - capacityUtil)) * meanProcessTime;
 
         //Map rating to log function with base 1.14
         //rating = (Math.log(rating * 100)) / (Math.log(1.14));
@@ -251,7 +251,7 @@ app.get('/getEMwindowRating', function(request, response) {
         //         rating = 99;
         // }
 
-        rating = String(rating * 10);
+        rating = String(rating * 100);
 
         console.log("Rating: " + rating);
 
